@@ -1,0 +1,130 @@
+﻿@page "/CustomerList"
+
+@using Blazor_CRUD.Data
+@using DataAccess.Entities
+@using DataAccess.Repository
+@inject ICustomerRepository _customer
+
+
+<h3>CustomerList</h3>
+<button class="btn-primary" @onclick="Showpopup">Add New Customer</button>
+@if (popup)
+{
+    <div class="modal" tabindex="-1" style="display:block;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Customer Detail</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <EditForm Model="customerObject" OnValidSubmit="InsertCustomer">
+                    <div class="modal-body">
+                        <table border="1">
+                            <tr>
+                                <td>Customer Name</td>
+                                <td><input type="text" placeholder="Customer Name" @bind="customerObject.Name" /></td>
+                            </tr>
+                            <tr>
+                                <td>Customer Age</td>
+                                <td><input type="text" placeholder="Customer Age" @bind="customerObject.Age" /></td>
+                            </tr>
+                            <tr>
+                                <td>Customer Height</td>
+                                <td><input type="text" placeholder="Customer Height" @bind="customerObject.Height" /></td>
+                            </tr>
+                            <tr>
+                                <td>Customer Postcode</td>
+                                <td><input type="text" placeholder="Customer Postcode" @bind="customerObject.Postcode" /></td>
+                            </tr>
+                        </table>
+                        <p>Modal body text goes here.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="closepopup">Close</button>
+                        <button type="submit" class="btn btn-primary" @onclick="closepopup">Save changes</button>
+                    </div>
+                </EditForm>
+
+            </div>
+        </div>
+    </div>
+}
+<table class="table">
+    <tr>
+        <th>Customer Name</th>
+        <th>Customer Age</th>
+        <th>Customer Postcode</th>
+        <th>Customer Height</th>
+    </tr>
+    @foreach (var item in Displaydata)
+    {
+        <tr>
+            <td>@item.Name</td>
+            <td>@item.Age</td>
+            <td>@item.Postcode</td>
+            <td>@item.Height</td>
+            <td><button class="btn-info" @onclick="(()=>EditCustomer(item))">Edit</button></td>
+            <td><button class="btn-danger" @onclick="(()=>DeleteCustomer(item))">Delete</button></td>
+        </tr>
+    }
+
+</table>
+
+@code {
+    List<Customer> Displaydata;
+    Customer customerObject = new Customer();
+
+    bool popup = false;
+    void Showpopup()
+    {
+        popup = true;
+    }
+    void closepopup()
+    {
+        popup = false;
+    }
+
+    protected override void OnInitialized()
+    {
+        Displaydata = _customer.GetAll();
+    }
+    void InsertCustomer()
+    {
+        var objUpdate = false;
+        if (customerObject.Id > 0)
+        {
+            objUpdate = _customer.UpdateCustomer(customerObject);
+            popup = false;
+        }
+        else
+        {
+            customerObject.Id = 0;
+            _customer.AddCustomer(customerObject);
+        }
+        Displaydata = _customer.GetAll();
+    }
+    public Customer GetCustomerDetail(int CustomerID)
+    {
+        return _customer.GetCustomerById(CustomerID);
+    }
+
+    void EditCustomer(Customer c)
+    {
+        customerObject = c;
+        popup = true;
+    }
+    void DeleteCustomer(Customer c)
+    {
+        _customer.DeleteCustomer(c);
+        Displaydata.Clear();
+        Displaydata = _customer.GetAll();
+
+    }
+
+    //public bool UpdateCustomer(Customer c)
+    //{
+    //    return _customer.UpdateCustomer(c);
+    //}
+}
